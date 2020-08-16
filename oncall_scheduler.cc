@@ -20,18 +20,24 @@ using operations_research::sat::SolveCpModel;
 using operations_research::sat::CpSolverResponse;
 using operations_research::sat::CpSolverResponseStats;
 
+DEFINE_int32(num_weeks, 4, "Number of weeks to look forward");
+
 namespace oncall_scheduler {
 
 
+// The carbon based life form part of the oncall rotation consisting
+// of a name and location.
 struct Person {
     std::string name;
     std::string location_name;
 };
 
+// The actual oncall rotation (e.g. with schedule times per location).
 struct Rotation {
     std::vector<Person> persons;
 };
 
+// TODO(freyth): Consult the proto of previous oncalls
 static bool was_primary_oncall(int week, Person p) {
     return p.name == "me";
 }
@@ -217,6 +223,7 @@ void schedule(const int num_shifts, const int lookback) {
         builder.AddEquality(secondary_shifts[lookback+i][0], builder.FalseVar());
     }
 
+    // Simulate a public holiday in DEF which makes scheduling more expensive.
     for (int i = 0; i < num_shifts; ++i) {
             const int shift = lookback + i;
 
@@ -275,6 +282,6 @@ int main(int argc, char **argv) {
   gflags::SetUsageMessage(kUsage);
   gflags::ParseCommandLineFlags(&argc, &argv, true);
 
-  oncall_scheduler::schedule(4, 1);
+  oncall_scheduler::schedule(FLAGS_num_weeks, 1);
   return EXIT_SUCCESS;
 }
